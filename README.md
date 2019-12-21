@@ -1,2 +1,0 @@
-# OpenCartImport
-Opencart import module
