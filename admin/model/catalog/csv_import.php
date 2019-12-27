@@ -49,6 +49,7 @@ class ModelCatalogCsvImport extends Model {
         $products_updated = 0;
         $ocf_fields = array();
         $ocf_filter_options = array();
+        $table_exists = null;
         
         $added_product_id = null;
         $category_added_before = null;
@@ -59,8 +60,8 @@ class ModelCatalogCsvImport extends Model {
            
             // Отделка	Тип простыни	Тип печати	Упаковка комплекта	Тип застежки
             if($field == 'Отделка' || $field == 'Тип простыни' || $field == 'Тип печати' || $field == 'Упаковка комплекта' 
-            || $field == 'Тип застежки' || $field == 'country' || $field == 'filler')
-             // || $field == 'param_name' || $field == 'param_value')
+            || $field == 'Тип застежки' || $field == 'country' || $field == 'filler' || $field == 'duvet' || $field == 'pillowcase' 
+            || $field == 'sheet')
             {
                 $ocf_fields[] = $field;
             }
@@ -130,13 +131,14 @@ class ModelCatalogCsvImport extends Model {
                 
                 foreach($ocf_fields as $attr)
                 {
-                    /* $attr_exists = $this->db->query('SELECT `attribute_id` FROM `oc_attribute_description` AS cnt 
-                    WHERE `name` = "'. $attr .'" 
-                    LIMIT 1'); */
 
                     
                     if($attr == 'filler') $attr = 'Наполнитель';
                     if($attr == 'country') $attr = 'Страна производитель';
+                    if($attr == 'duvet') $search_option = 'Размер одеяла';
+                    if($attr == 'pillowcase') $search_option = 'Размер наволочки';
+                    if($attr == 'sheet') $search_option = 'Размер простыни';
+                    
 
                     $ocf_filter_options[] = $attr;
                     
@@ -172,35 +174,8 @@ class ModelCatalogCsvImport extends Model {
 
                             $this->db->query($ocfilter_option2store_query);
                         }
-                        
-                        
-                        
                     }
-
-                    
-                    /* if($attr_exists->num_rows == 0)
-                    {
-                        $this->db->query('INSERT INTO `oc_attribute`
-                        (`attribute_group_id`, `sort_order`) 
-                        VALUES (16,0)');
-
-                        $new_attr_id = $this->db->getLastId();
-
-                        $this->db->query('INSERT INTO `oc_attribute_description`
-                        (`attribute_id`, `language_id`, `name`) 
-                        VALUES ("'.$new_attr_id.'",1,"'.$attr.'")');
-                    }
-                    else
-                    {
-                        $new_attr_id = $attr_exists->row['attribute_id'];
-                    }
-                    $attr2id[$attr] = $new_attr_id;  */// add it to array with attributes
-                    
-                    
                 }
-                
-
-
             }
             
 
@@ -224,151 +199,54 @@ class ModelCatalogCsvImport extends Model {
 
                 }
 
-                // Фильтр
-
                 
-                /*$filter_param_id = $this->exists('option_id','oc_ocfilter_option_description','name',$csv_item['param_name']);
-             
-                
-                if( ! $filter_param_id)
-                {
-                     $cyr  = array('а','б','в','г','д','е','ё','ж','з','и','й','к','л','м','н','о','п','р','с','т','у', 
-                                'ф','х','ц','ч','ш','щ','ъ', 'ы','ь', 'э', 'ю','я','А','Б','В','Г','Д','Е','Ж','З','И','Й','К','Л','М','Н','О','П','Р','С','Т','У',
-                                'Ф','Х','Ц','Ч','Ш','Щ','Ъ', 'Ы','Ь', 'Э', 'Ю','Я');
-                    $lat = array( 'a','b','v','g','d','e','io','zh','z','i','y','k','l','m','n','o','p','r','s','t','u',
-                                'f' ,'h' ,'ts' ,'ch','sh' ,'sht' ,'a', 'i', 'y', 'e' ,'yu' ,'ya','A','B','V','G','D','E','Zh',
-                                'Z','I','Y','K','L','M','N','O','P','R','S','T','U',
-                                'F' ,'H' ,'Ts' ,'Ch','Sh' ,'Sht' ,'A' ,'Y' ,'Yu' ,'Ya');
-
-                    $keyword_sp = str_replace($cyr, $lat, strtolower($csv_item['param_name']));
-                    $keyword = str_replace(' ', '-', $keyword_sp);
-
-
-                    $this->db->query('INSERT INTO `oc_ocfilter_option`
-                    (`type`, `keyword`) 
-                    VALUES ("checkbox","'. $keyword .'")');
-
-                    $option_id = $this->db->getLastId();
-
-                    $this->db->query('INSERT INTO `oc_ocfilter_option_description`
-                    (`option_id`, `language_id`, `name`, `postfix`, `description`) 
-                    VALUES ("'. $option_id .'",1,"'. $csv_item['param_name'] .'","","")');
-
-                    
-
-                    $option2store = $this->exists('option_id', 'oc_ocfilter_option_to_store', 'option_id', $option_id); */
-
-                    /* $option2store = $this->db->query('SELECT `option_id` FROM `oc_ocfilter_option_to_store` 
-                        WHERE `option_id` = "'. $option_id .'"
-                        LIMIT 1'); */
-                    // dd($option2store);
-                    /* if( ! $option2store)
-                    {
-                        $this->db->query('INSERT INTO `oc_ocfilter_option_to_store`
-                        (`option_id`, `store_id`)
-                        VALUES ('. $option_id .',0)');
-                    }
-
-                    $value_keyword_sp = str_replace($cyr, $lat, $csv_item['param_value']);
-                    $value_keyword = str_replace(' ', '-', $value_keyword_sp);
-
-                    $this->db->query('INSERT INTO `oc_ocfilter_option_value`
-                    (`option_id`, `keyword`, `color`, `image`) 
-                    VALUES ('. option_id .',"'.$value_keyword.'","","")');
-
-                    $ocfilter_option_value_id = $this->db->getLastId();
-
-                    $this->db->query('INSERT INTO `oc_ocfilter_option_value_description`
-                    (`value_id`, `option_id`, `language_id`, `name`) 
-                    VALUES ('.$ocfilter_option_value_id.','.$option_id.',1,"'. $csv_item['param_value'] .'")');
-
-
-                    
-                        
-                    
-
-
-                    
-                   
-                } */
-                
-
-                
-
-
-                
-                
-                
-
-
-
-
-
                 //--------------    Товары   -------------//
 
                 // Товар существует?
+                               
                 $product_exists = $this->db->query('SELECT `product_id` FROM `oc_product` AS cnt 
-                WHERE `model` = "'. $csv_item['article_and_param'] .'" AND `sku` = "'. $csv_item['article'] .'" 
+                WHERE `model` = "'. $csv_item['article_and_param'] .'" AND `sku` = "'. $csv_item['article_and_param_val'] .'" 
                 LIMIT 1');
 
 
+                // Brand
+                $product_brand = isset($brands[$csv_item['brand']]) ? $brands[$csv_item['brand']] : $csv_item['brand'];
+                
 
-                /*if($product_exists->num_rows == 0)
+                $product_brand_id = $this->name_exists('manufacturer_id', 'oc_manufacturer', $product_brand);                   
+                
+
+                if( ! $product_brand_id)
                 {
-                    $product_id = $product_exists->row['product_id'];
-                }*/
-                    // Brand
-                    $product_brand = isset($brands[$csv_item['brand']]) ? $brands[$csv_item['brand']] : $csv_item['brand'];
-                    
-                    /* $brand_exists = $this->db->query('SELECT `manufacturer_id` FROM `oc_manufacturer` AS cnt 
-                    WHERE `name` = "'. $product_brand .'"
-                    LIMIT 1'); */
+                    $csv_brand_exists = $this->db->query('SELECT `manufacturer_id` FROM `oc_manufacturer` AS cnt 
+                    WHERE `name` = "'. $csv_item['brand'] .'"
+                    LIMIT 1');
 
-                    $product_brand_id = $this->name_exists('manufacturer_id', 'oc_manufacturer', $product_brand);                   
-                    
 
-                    /* if($brand_exists->num_rows != 0)
+                    if($csv_brand_exists->num_rows == 0)
                     {
-                        $product_brand_id = $brand_exists->row['manufacturer_id'];
+                        $this->db->query('INSERT INTO `oc_manufacturer`
+                        (`name`, `image`, `sort_order`) 
+                        VALUES 
+                        ("'. $product_brand .'","",0)');                            
+
+                        $product_brand_id = $this->db->getLastId();
+
+                        $this->db->query('INSERT INTO `oc_manufacturer_description`
+                        (`manufacturer_id`, `language_id`, `name`, `description`, `meta_title`, `meta_h1`, `meta_description`, `meta_keyword`) 
+                        VALUES 
+                        ('. $product_brand_id .', 1,"'. $product_brand .'","'. $product_brand .'","'. $product_brand .'",
+                        "'. $product_brand .'","'. $product_brand .'","'. $product_brand .'")');
+
+                        $this->db->query('INSERT INTO `oc_manufacturer_to_store`
+                        (`manufacturer_id`, `store_id`) 
+                        VALUES ('. $product_brand_id .',0)');
                     }
-                    else */
-                    if( ! $product_brand_id)
-                    {
-                        $csv_brand_exists = $this->db->query('SELECT `manufacturer_id` FROM `oc_manufacturer` AS cnt 
-                        WHERE `name` = "'. $csv_item['brand'] .'"
-                        LIMIT 1');
-
-                        // $csv_brand_exists = $this->exists('manufacturer_id', 'oc_manufacturer', 'name', $csv_item['brand']);
-
-                        if($csv_brand_exists->num_rows == 0)
-                        // if( ! $csv_brand_exists)
-                        {
-                            $this->db->query('INSERT INTO `oc_manufacturer`
-                            (`name`, `image`, `sort_order`) 
-                            VALUES 
-                            ("'. $product_brand .'","",0)');                            
-
-                            $product_brand_id = $this->db->getLastId();
-
-                            $this->db->query('INSERT INTO `oc_manufacturer_description`
-                            (`manufacturer_id`, `language_id`, `name`, `description`, `meta_title`, `meta_h1`, `meta_description`, `meta_keyword`) 
-                            VALUES 
-                            ('. $product_brand_id .', 1,"'. $product_brand .'","'. $product_brand .'","'. $product_brand .'",
-                            "'. $product_brand .'","'. $product_brand .'","'. $product_brand .'")');
-
-                            $this->db->query('INSERT INTO `oc_manufacturer_to_store`
-                            (`manufacturer_id`, `store_id`) 
-                            VALUES ('. $product_brand_id .',0)');
-                        }
-                    }
-
-                    
-
-                    
+                }
 
 
-                    // Image
-                    $image = $this->copyImage($csv_item['img_src']);
+                // Image
+                $image = $this->copyImage($csv_item['img_src']);
 
 
                 if($product_exists->num_rows == 0)
@@ -378,8 +256,8 @@ class ModelCatalogCsvImport extends Model {
                     `stock_status_id`, `image`, `manufacturer_id`, `price`, `tax_class_id`,                    
                     `date_available`, `status`, `date_added`, `date_modified`,  `product_stickers`, `import_batch`
                     ) VALUES (          
-                    NULL,"' . $csv_item['article_and_param'] . '", "' . $csv_item['article'] . '","' . $csv_item['article'] . '"
-                    ,"","","","", "", "' . $csv_item['count_goods'] . '", 7,"' . $image . '",
+                    NULL,"' . $csv_item['article_and_param'] . '","' . $csv_item['article_and_param_val'] . '","' . $csv_item['article_and_param'] . '",
+                    "","","","", "", "' . $csv_item['count_goods'] . '", 7,"' . $image . '",
                     "' . $product_brand_id . '",' . $csv_item['price'] . ',1,                    
                     CURRENT_TIMESTAMP, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, "", CONCAT("csv_import-", CURRENT_DATE))');
                 }
@@ -388,9 +266,10 @@ class ModelCatalogCsvImport extends Model {
                     $product_id = $product_exists->row['product_id'];
 
                     $query_result = $this->db->query('UPDATE `oc_product` 
-                    SET `quantity`='.$csv_item['count_goods'].', `image`="'.$image.'", `manufacturer_id`="'.$product_brand_id.'",
-                    
-                    `price`='.$csv_item['price'].', `date_modified`=CURRENT_TIMESTAMP, `import_batch`=CONCAT("csv_import-", CURRENT_DATE) 
+                    SET `model` = "'.$csv_item['article_and_param'].'", `sku`="'.$csv_item['article_and_param_val'].'",
+                    `upc`="'.$csv_item['article_and_param'].'", `quantity`='.$csv_item['count_goods'].', 
+                    `image`="'.$image.'", `manufacturer_id`="'.$product_brand_id.'", `price`='.$csv_item['price'].', 
+                    `date_modified`=CURRENT_TIMESTAMP, `import_batch`=CONCAT("csv_import-", CURRENT_DATE) 
                     WHERE `product_id`= '.$product_id .' ');
 
                     $added_product_id = $product_id;
@@ -449,9 +328,6 @@ class ModelCatalogCsvImport extends Model {
                         }
                         else
                         {
-
-
-
                             $update_description_query = 'UPDATE `oc_product_description` 
                             SET `name`="'.$csv_item['name'].'",`meta_title`="' . $csv_item['name'] . '",
                             `meta_h1`="' . $csv_item['name'] . '" 
@@ -466,22 +342,24 @@ class ModelCatalogCsvImport extends Model {
 
                     }
 
-                    
-                /*}
-                else
-                {
-                    continue;
-                }*/
-
-
-                
-
-
-
 
                 //--------------    Категории   -------------//
                 $cat_count = 0;
-                // Существует ли в таблице cat_description родительская категория
+
+                if( ! $table_exists)
+                {
+                    $create_catesgories_table_query = 'CREATE TABLE IF NOT EXISTS oc_cat_id 
+                    (id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                    cat_name VARCHAR(100) NULL DEFAULT NULL,
+                    parent_cat_id VARCHAR(100) NULL DEFAULT NULL)';
+                    
+                    $this->db->query($create_catesgories_table_query);
+                    $table_exists = 1;
+                }
+                
+
+
+                // Существует ли в таблице oc_category_description родительская категория
                 $exists_parent_cat = $this->db->query('SELECT `category_id` FROM `oc_category_description` AS cnt 
                     WHERE `name` = "' . $csv_item['par_cat_id'] . '" 
                     LIMIT 1');
@@ -531,14 +409,12 @@ class ModelCatalogCsvImport extends Model {
                             
                         }
                     }
-
-                    
                     
                 }
 
-//                dd($added_product_id);
 
-                // Check if the product to category already exists
+
+                // Проверка существования product to category
                 $prod2cat_exists = $this->db->query('SELECT `product_id` FROM `oc_product_to_category` AS cnt 
                 WHERE `product_id` = '.$added_product_id.' AND `category_id` = '. $parent_cat_id .' 
                 LIMIT 1');
@@ -570,44 +446,17 @@ class ModelCatalogCsvImport extends Model {
 
                 // Существует ли категория в таблице описания
 
-                /* $exists_cat = $this->db->query('SELECT `category_id` FROM `oc_category_description` AS cnt 
-                WHERE `name` = "'. $csv_item['cat_id'] .'" 
-                LIMIT 1'); */
+                $category_id = $this->exists('id', 'oc_cat_id', 'cat_name', $csv_item['cat_id']);
 
-                $category_id = $this->name_exists('category_id', 'oc_category_description', $csv_item['cat_id']);
-
-                // if ($exists_cat->num_rows == 0)
+                
                 if ( ! $category_id)
-                {                    
-                    $query_result = $this->db->query('INSERT INTO `oc_category`
-                    (`category_id`, `image`, `image_big`, `menu_ico`, `parent_id`, `top`, `column`, `width`, `height`, 
-                    `column_card`, `sort_order`, `status`, `date_added`, `date_modified`) 
-                    VALUES(NULL, NULL, NULL, "", '. $parent_cat_id .', 0, 1, 0, 0, 
-                    0, 0, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)');
-
-                    if($query_result)
-                    {
-                        $new_row_id = $this->db->getlastId();
-                        $field_value = $this->db->escape($csv_item['cat_id']);
-
-                        // Category description
-                        $query_result = $this->db->query('INSERT INTO `oc_category_description`
-                        (`category_id`, `language_id`, `name`, `description`, `meta_title`, `meta_h1`, `meta_description`, `meta_keyword`)
-                        VALUES ('. $new_row_id .', 1, "'. $field_value .'","'. $field_value .'","'. $field_value.'","'. $field_value.'","'. $field_value.'","'. $field_value.'")');
-
-                        if($query_result)
-                        {
-                            $category_id = $new_row_id;
-//                            $added_category_id = $new_row_id;
-                        }
-                    } 
-                    
+                {        
+                    $query_result = $this->db->query('INSERT INTO `oc_cat_id`
+                    (`cat_name`, `parent_cat_id`) 
+                    VALUES ("'.$csv_item['cat_id'].'", '. $parent_cat_id .')');
                     
                 }
-                /* else
-                {
-                    $category_id = $exists_cat->row['category_id'];
-                } */
+                
                 $new_product_id = $new_product_id ? $new_product_id : $added_product_id;
 
                 $tags = $csv_item['name'].','.$csv_item['article'].','.$csv_item['article_and_param'].','.$product_brand.','.$csv_item['cat_id'];
@@ -634,19 +483,57 @@ class ModelCatalogCsvImport extends Model {
                     {
                         $search_option = 'Страна производитель';
                     }
+                    
+                    if($ocf_option == 'duvet')
+                    {
+                        $search_option = 'Размер одеяла';
+                    }
+                    
+                    if($ocf_option == 'pillowcase')
+                    {
+                        $search_option = 'Размер наволочки';
+                    }
+                    
+                    if($ocf_option == 'sheet')
+                    {
+                        $search_option = 'Размер простыни';
+                    }
 
 
 
                     
+                   
                     $ocf_option_keyword = $this->translit(trim($csv_item[$ocf_option]));
-                    
 
-                    /* $ocf_option_value_id = $this->db->query('SELECT `value_id` FROM `oc_ocfilter_option_value_description` AS cnt 
-                    WHERE `name` = "'. $ocf_option .'"
-                    LIMIT 1'); */
+                    if( !empty($ocf_option_keyword)) $keyword_frst_sym = $ocf_option_keyword[0];
+
+                    // Убираем лишние символы из keyword
+                    $transformed_keyword = preg_replace('/\W/', '', $ocf_option_keyword);                  
+                    
                     
                     $ocf_option_option_id = $this->name_exists('option_id', 'oc_ocfilter_option_description', $search_option);
 
+
+
+                    $dbtable_keyword_query = 'SELECT `keyword` FROM `oc_ocfilter_option_value`
+                    WHERE `option_id` = '.$ocf_option_option_id.' AND `keyword` LIKE "'.$keyword_frst_sym.'%"';
+
+                    $keywords = $this->db->query($dbtable_keyword_query)->rows;
+
+                    foreach($keywords as $k => $kwd)
+                    {
+                        // Убираем лишние символы из keyword из БД
+                        $clean_keyword = preg_replace('/\W/', '', $kwd['keyword']) ;
+                        if($clean_keyword == $transformed_keyword) 
+                        {
+                            // Если находится подходящий, берем первый
+                            $ocf_option_keyword = $kwd['keyword'];                            
+                            break;
+                        }
+                    }
+                    
+
+                    
                     
 
                     if($ocf_option_option_id && (!empty($ocf_option_keyword)))
@@ -695,22 +582,23 @@ class ModelCatalogCsvImport extends Model {
                             VALUES ('.$ocf_attribute_id.','.$added_product_id.',16,1,"'.$csv_item[$ocf_option].'","'.$ocf_option_keyword.'",
                             "'.$search_option.'","'.$attribute_name_mod.'",6)';
 
-                        // dd($oc_oct_filter_product_attribute_query);
+                        
 
                         $this->db->query($oc_oct_filter_product_attribute_query);
 
 
-
+                        
                         $oc_filter_option_value2prod_id = $this->db->query('SELECT `ocfilter_option_value_to_product_id` 
                             FROM `oc_ocfilter_option_value_to_product` AS cnt 
-                            WHERE `option_id` = '.$ocf_option_option_id.' AND `product_id` = '.$added_product_id.' 
+                            WHERE `option_id` = '.$ocf_option_option_id.' AND `product_id` = '.$added_product_id.' AND `value_id` = ' . $ocf_option_value_id . ' 
                             LIMIT 1');
+                        
 
                         if ($oc_filter_option_value2prod_id->num_rows == 0)
                         {
                             $oc_option2product_query = 'INSERT INTO `oc_ocfilter_option_value_to_product`
                             (`product_id`, `option_id`, `value_id`) 
-                            VALUES (' . $new_product_id . ',' . $ocf_option_option_id . ',' . $ocf_option_value_id . ')';
+                            VALUES (' . $added_product_id . ',' . $ocf_option_option_id . ',' . $ocf_option_value_id . ')';
 
                             $this->db->query($oc_option2product_query);
                         }
@@ -815,7 +703,6 @@ class ModelCatalogCsvImport extends Model {
             $image = file_get_contents($img);
             if($image)
             {
-//                $name = pathinfo($img, PATHINFO_FILENAME) .'.'. pathinfo($img, PATHINFO_EXTENSION);
                 $name = $img_name;
                 $new_file = fopen($img_dir . $name, 'w');
                 fwrite($new_file, $image);
@@ -865,9 +752,9 @@ class ModelCatalogCsvImport extends Model {
                     'ф','х','ц','ч','ш','щ','ъ', 'ы','ь', 'э', 'ю','я','А','Б','В','Г','Д','Е','Ж','З','И','Й',
                     'К','Л','М','Н','О','П','Р','С','Т','У', 'Ф','Х','Ц','Ч','Ш','Щ','Ъ', 'Ы','Ь', 'Э', 'Ю','Я');
             $lat = array( 'a','b','v','g','d','e','io','zh','z','i','j','k','l','m','n','o','p','r','s','t','u',
-                    'f' ,'h' ,'ts' ,'ch','sh' ,'sht' ,'a', 'y', 'y', 'e' ,'yu' ,'ya','A','B','V','G','D','E','Zh',
+                    'f' ,'h' ,'ts' ,'ch','sh' ,'sht' ,'a', 'y', 'y', 'e' ,'ju' ,'ja','A','B','V','G','D','E','Zh',
                     'Z','I','Y','K','L','M','N','O','P','R','S','T','U',
-                    'F' ,'H' ,'Ts' ,'Ch','Sh' ,'Sht' ,'A' ,'Y' ,'Yu' ,'Ya');
+                    'F' ,'H' ,'Ts' ,'Ch','Sh' ,'Sht' ,'A' ,'Y' ,'Ju' ,'Ja');
             $lower = mb_strtolower($string);
             $word_sp = str_replace($cyr, $lat, $lower);
             $string = str_replace(' ', '-', $word_sp);
@@ -875,7 +762,6 @@ class ModelCatalogCsvImport extends Model {
 
         return $string;        
     }
-
 
 
 }
