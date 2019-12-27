@@ -698,7 +698,7 @@ class ModelCatalogCsvImport extends Model {
         else
         {
             if( ! file_exists($img_dir))            
-                mkdir($img_dir, 755);
+                mkdir($img_dir, 0755);
             
             $image = file_get_contents($img);
             if($image)
