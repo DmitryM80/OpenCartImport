@@ -72,7 +72,7 @@ class ModelCatalogCsvImport extends Model {
              && $field != 'name' && $field != 'article' && $field != 'article_and_param' && $field != 'article_and_param_val'
               && $field != 'price' && $field != 'count_goods' && $field != 'textile' && $field != 'color_count' && $field != 'base_color' 
               && $field != 'pillowcase' && $field != 'duvet' && $field != 'sheet' && $field != 'param_value' && $field != 'consist' 
-              && $field != 'pict_style' && $field != 'country' && $field != 'brand' && $field != 'img_src' && $field != 'density'
+              && $field != 'pict_style' && $field != 'country' && $field != 'brand' && $field != 'img_src' && $field != 'img_name' && $field != 'density'
               && $field != 'Отделка' && $field != 'Тип простыни' && $field != 'Тип печати' && $field != 'Упаковка комплекта' 
             && $field != 'Тип застежки' && $field != 'param_name' && $field != 'param_value' && $field != 'filler')
             {
@@ -256,7 +256,7 @@ class ModelCatalogCsvImport extends Model {
                     `stock_status_id`, `image`, `manufacturer_id`, `price`, `tax_class_id`,                    
                     `date_available`, `status`, `date_added`, `date_modified`,  `product_stickers`, `import_batch`
                     ) VALUES (          
-                    NULL,"' . $csv_item['article_and_param'] . '","' . $csv_item['article_and_param_val'] . '","' . $csv_item['article_and_param'] . '",
+                    NULL,"' . $csv_item['article_and_param'] . '","' . $csv_item['article_and_param_val'] . '","' . $csv_item['article'] . '",
                     "","","","", "", "' . $csv_item['count_goods'] . '", 7,"' . $image . '",
                     "' . $product_brand_id . '",' . $csv_item['price'] . ',1,                    
                     CURRENT_TIMESTAMP, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, "", CONCAT("csv_import-", CURRENT_DATE))');
@@ -267,7 +267,7 @@ class ModelCatalogCsvImport extends Model {
 
                     $query_result = $this->db->query('UPDATE `oc_product` 
                     SET `model` = "'.$csv_item['article_and_param'].'", `sku`="'.$csv_item['article_and_param_val'].'",
-                    `upc`="'.$csv_item['article_and_param'].'", `quantity`='.$csv_item['count_goods'].', 
+                    `upc`="'.$csv_item['img_name'].'", `quantity`='.$csv_item['count_goods'].', 
                     `image`="'.$image.'", `manufacturer_id`="'.$product_brand_id.'", `price`='.$csv_item['price'].', 
                     `date_modified`=CURRENT_TIMESTAMP, `import_batch`=CONCAT("csv_import-", CURRENT_DATE) 
                     WHERE `product_id`= '.$product_id .' ');
