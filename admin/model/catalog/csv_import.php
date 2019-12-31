@@ -146,6 +146,10 @@ class ModelCatalogCsvImport extends Model {
                     
                     $ocfilter_option_id = $this->name_exists('option_id', 'oc_ocfilter_option_description', $attr);
 
+                    // Attributes 
+                    // dd($attr);
+
+
                     if( ! $ocfilter_option_id)
                     {
                         
@@ -176,6 +180,8 @@ class ModelCatalogCsvImport extends Model {
                         }
                     }
                 }
+
+                // dd($ocf_filter_options);
             }
             
 
@@ -205,7 +211,7 @@ class ModelCatalogCsvImport extends Model {
                 // Товар существует?
                                
                 $product_exists = $this->db->query('SELECT `product_id` FROM `oc_product` AS cnt 
-                WHERE `model` = "'. $csv_item['article_and_param'] .'" AND `sku` = "'. $csv_item['article_and_param_val'] .'" 
+                WHERE `model` = "'. $csv_item['article_and_param_val'] .'" AND `sku` = "'. $csv_item['article_and_param'] .'" 
                 LIMIT 1');
 
 
@@ -256,27 +262,26 @@ class ModelCatalogCsvImport extends Model {
                     `stock_status_id`, `image`, `manufacturer_id`, `price`, `tax_class_id`,                    
                     `date_available`, `status`, `date_added`, `date_modified`,  `product_stickers`, `import_batch`
                     ) VALUES (          
-                    NULL,"' . $csv_item['article_and_param'] . '","' . $csv_item['article_and_param_val'] . '","' . $csv_item['article'] . '",
+                    NULL,"' . $csv_item['article_and_param_val'] . '","' . $csv_item['article_and_param'] . '","' . $csv_item['article'] . '",
                     "","","","", "", "' . $csv_item['count_goods'] . '", 7,"' . $image . '",
-                    "' . $product_brand_id . '",' . $csv_item['price'] . ',1,                    
+                    "' . $product_brand_id . '","' . $csv_item['price'] . '",1,                    
                     CURRENT_TIMESTAMP, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, "", CONCAT("csv_import-", CURRENT_DATE))');
+                    $product_id = $this->db->getLastId();
                 }
                 else
                 {
                     $product_id = $product_exists->row['product_id'];
 
                     $query_result = $this->db->query('UPDATE `oc_product` 
-                    SET `model` = "'.$csv_item['article_and_param'].'", `sku`="'.$csv_item['article_and_param_val'].'",
-                    `upc`="'.$csv_item['img_name'].'", `quantity`='.$csv_item['count_goods'].', 
-                    `image`="'.$image.'", `manufacturer_id`="'.$product_brand_id.'", `price`='.$csv_item['price'].', 
+                    SET `model` = "'.$csv_item['article_and_param_val'].'", `sku`="'.$csv_item['article_and_param'].'",
+                    `upc`="'.$csv_item['article'].'", `quantity`="'.$csv_item['count_goods'].'", 
+                    `image`="'.$image.'", `manufacturer_id`="'.$product_brand_id.'", `price`="'.$csv_item['price'].'", 
                     `date_modified`=CURRENT_TIMESTAMP, `import_batch`=CONCAT("csv_import-", CURRENT_DATE) 
                     WHERE `product_id`= '.$product_id .' ');
 
                     $added_product_id = $product_id;
                 }
-                    
-                        
-                    
+
                     
 
 
@@ -466,7 +471,7 @@ class ModelCatalogCsvImport extends Model {
                 SET `description`="'.$csv_item['name'].'",`tag`="'.$tags.'", `meta_description`="'.$tags.'",`meta_keyword`="'.$tags.'" 
                 WHERE `product_id` = '.$new_product_id);
 
-
+                // dd($product_id);
 
                 // OC Filter
 
@@ -504,6 +509,8 @@ class ModelCatalogCsvImport extends Model {
                     
                    
                     $ocf_option_keyword = $this->translit(trim($csv_item[$ocf_option]));
+
+                    $keyword_frst_sym = '!';
 
                     if( !empty($ocf_option_keyword)) $keyword_frst_sym = $ocf_option_keyword[0];
 
@@ -628,6 +635,67 @@ class ModelCatalogCsvImport extends Model {
 
                          
 
+                    }
+
+                    // Аттрибуты внизу картинки товара
+                    $current_attr_value = trim($csv_item[$ocf_option]);
+                    
+                    if(!empty($current_attr_value))
+                    {
+                        $existing_attribute_id = $this->name_exists('attribute_id','oc_attribute_description',$search_option);
+
+                        
+                        if($existing_attribute_id)
+                        {
+                            $existing_attr2product_id_query = 'SELECT `attribute_id` FROM `oc_product_attribute` 
+                            WHERE `product_id`='.$product_id.' AND `attribute_id`='.$existing_attribute_id.' AND `text`="'.$current_attr_value.'"';
+                            $existing_attr2product_id = $this->db->query($existing_attr2product_id_query);
+                                                        
+
+                            if($existing_attr2product_id->num_rows != 0)
+                            {                                
+                                $upd_attr2product_query = 'UPDATE `oc_product_attribute` 
+                                SET `text`="'.$current_attr_value.'" 
+                                WHERE `product_id`='.$product_id.' AND `attribute_id`='.$existing_attr2product_id->row['attribute_id'];
+                                
+                                $this->db->query($upd_attr2product_query);
+                            }
+                            else
+                            {
+                                $exists_attr2prod = $this->db->query('SELECT `product_id` FROM `oc_product_attribute` AS cnt
+                                                                    WHERE `product_id`='.$product_id.' AND `attribute_id`='.$existing_attribute_id.'
+                                                                    LIMIT 1');
+
+                                if($exists_attr2prod->num_rows != 0)
+                                {
+                                    $update_attr_value_query = 'UPDATE `oc_product_attribute` 
+                                    SET `text`="'.$current_attr_value.'" 
+                                    WHERE `product_id`='.$product_id.' AND `attribute_id`='.$existing_attribute_id;
+                                    $this->db->query($update_attr_value_query);
+                                }
+                                else
+                                {
+                                    $add_attribute2product_query = 'INSERT INTO `oc_product_attribute`(`product_id`, `attribute_id`, `language_id`, `text`) 
+                                    VALUES ('.$product_id.','.$existing_attribute_id.',1,"'.$current_attr_value.'")';
+                                    $this->db->query($add_attribute2product_query);
+                                }
+                            }                        
+                        }
+                        else
+                        {
+                            $add_attribute_query = 'INSERT INTO `oc_attribute`(`attribute_group_id`, `sort_order`) 
+                            VALUES (16,0)';
+                            $this->db->query($add_attribute_query);
+                            $current_attribute_id = $this->db->getLastId();
+
+                            $add_attribute_descr_query = 'INSERT INTO `oc_attribute_description`(`attribute_id`, `language_id`, `name`) 
+                            VALUES ('.$current_attribute_id.',1,"'.$search_option.'")';                            
+                            $this->db->query($add_attribute_descr_query);
+
+                            $add_attribute2product_query = 'INSERT INTO `oc_product_attribute`(`product_id`, `attribute_id`, `language_id`, `text`) 
+                            VALUES ('.$product_id.','.$current_attribute_id.',1,"'.$current_attr_value.'")';
+                            $this->db->query($add_attribute2product_query);
+                        }
                     }
 
                 }
