@@ -1,0 +1,13 @@
+{
+    "name": "postelio/postelio",
+    "description": "parser",
+    "authors": [
+        {
+            "name": "batorinka",
+            "email": "batorinka@list.ru"
+        }
+    ],
+    "require": {
+        "kub-at/php-simple-html-dom-parser": "^1.9"
+    }
+}
