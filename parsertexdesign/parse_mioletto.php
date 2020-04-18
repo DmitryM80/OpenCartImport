@@ -2,7 +2,7 @@
 
 ini_set('max_execution_time', 300); // работает долго
 
-require "path_to_vendor/vendor/autoload.php";
+require "path_to_current_directory/vendor/autoload.php";
 use KubAT\PhpSimple\HtmlDomParser;
 
 
