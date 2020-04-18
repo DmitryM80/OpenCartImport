@@ -94,7 +94,7 @@ class ModelCatalogCsvImport extends Model {
         if ($columns)
         {
 
-            $brands = array(
+            /* $brands = array(
                     'Famille'               => 'Фамилье'
                 ,   'Valtery'               => 'Вальтери'
                 ,   'Сайлид'                => 'Сайлид'
@@ -104,7 +104,7 @@ class ModelCatalogCsvImport extends Model {
                 ,   'Roseberry'             => 'ROSEBERRY'
                 ,   'OdaModa'               => 'OdaModa'
                 ,   'Incalpaca TPX'         => 'INCALPACA TPX'
-            );
+            ); */
     
             // Attributes
             // поле в импортируемой таблице => id аттрибута в БД
@@ -216,11 +216,12 @@ class ModelCatalogCsvImport extends Model {
 
 
                 // Brand
-                $product_brand = isset($brands[$csv_item['brand']]) ? $brands[$csv_item['brand']] : $csv_item['brand'];
+                // $product_brand = isset($brands[$csv_item['brand']]) ? $brands[$csv_item['brand']] : $csv_item['brand'];
                 
 
-                $product_brand_id = $this->name_exists('manufacturer_id', 'oc_manufacturer', $product_brand);                   
-                
+                // $product_brand_id = $this->name_exists('manufacturer_id', 'oc_manufacturer', $product_brand);                   
+                $product_brand_id = $this->name_exists('manufacturer_id', 'oc_manufacturer', $csv_item['brand']);  
+                                
 
                 if( ! $product_brand_id)
                 {
@@ -234,21 +235,30 @@ class ModelCatalogCsvImport extends Model {
                         $this->db->query('INSERT INTO `oc_manufacturer`
                         (`name`, `image`, `sort_order`) 
                         VALUES 
-                        ("'. $product_brand .'","",0)');                            
+                        ("'. $csv_item['brand'] .'","",0)');                            
 
                         $product_brand_id = $this->db->getLastId();
-
+                        
                         $this->db->query('INSERT INTO `oc_manufacturer_description`
                         (`manufacturer_id`, `language_id`, `name`, `description`, `meta_title`, `meta_h1`, `meta_description`, `meta_keyword`) 
                         VALUES 
-                        ('. $product_brand_id .', 1,"'. $product_brand .'","'. $product_brand .'","'. $product_brand .'",
-                        "'. $product_brand .'","'. $product_brand .'","'. $product_brand .'")');
+                        ('. $product_brand_id .', 1,"'. $csv_item['brand'] .'","'. $csv_item['brand'] .'","'. $csv_item['brand'] .'",
+                        "'. $csv_item['brand'] .'","'. $csv_item['brand'] .'","'. $csv_item['brand'] .'")');
 
                         $this->db->query('INSERT INTO `oc_manufacturer_to_store`
                         (`manufacturer_id`, `store_id`) 
                         VALUES ('. $product_brand_id .',0)');
                     }
+                    
                 }
+                /* else
+                {
+                    $update_brand_descr_query = 'UPDATE `oc_manufacturer_description` 
+                    SET `description`="'. $csv_item['brand'] .'",`meta_title`="'. $csv_item['brand'] .'",`meta_h1`="'. $csv_item['brand'] .'",`meta_description`="'. $csv_item['brand'] .'",`meta_keyword`="'. $csv_item['brand'] .'" 
+                    WHERE `manufacturer_id` = '.$product_brand_id;
+
+                    $this->db->query($update_brand_descr_query);
+                } */
 
 
                 // Image
@@ -464,7 +474,8 @@ class ModelCatalogCsvImport extends Model {
                 
                 $new_product_id = $new_product_id ? $new_product_id : $added_product_id;
 
-                $tags = $csv_item['name'].','.$csv_item['article'].','.$csv_item['article_and_param'].','.$product_brand.','.$csv_item['cat_id'];
+                // $tags = $csv_item['name'].','.$csv_item['article'].','.$csv_item['article_and_param'].','.$product_brand.','.$csv_item['cat_id'];
+                $tags = $csv_item['name'].','.$csv_item['article'].','.$csv_item['article_and_param'].','.$csv_item['brand'].','.$csv_item['cat_id'];
                 
 
                 $this->db->query('UPDATE `oc_product_description` 

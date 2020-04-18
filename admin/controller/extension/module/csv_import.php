@@ -1,6 +1,7 @@
 <?php
 
 
+
 class ControllerExtensionModuleCsvImport extends Controller {
 
 	private $error = array();
@@ -14,16 +15,26 @@ class ControllerExtensionModuleCsvImport extends Controller {
     private $result; 
     private $import_fields;
 
-
-
     public function index() {
 
 		$this->load->language('extension/module/csv_import');
 		$this->document->setTitle($this->language->get('heading_title'));
         $this->load->model('setting/setting');
         $this->load->model('catalog/csv_import');
-
-        
+        $this->load->model('catalog/tango_import');
+        $this->load->model('catalog/cleo_import');
+        $this->load->model('catalog/texdesign_import');
+        $this->load->model('catalog/texdesignpc_import');
+        $this->load->model('catalog/texdesignbt_import');
+        $this->load->model('catalog/texdesignpd_import');
+        $this->load->model('catalog/texdesigndc_import');
+        $this->load->model('catalog/texdesignbs_import');
+        $this->load->model('catalog/texdesignst_import');
+        $this->load->model('catalog/kingsilkbc_import');
+        $this->load->model('catalog/kingsilkpw_import');
+        $this->load->model('catalog/kingsilkbt_import');
+        $this->load->model('catalog/kingsilkbs_import');
+        $this->load->model('catalog/kingsilk_import');
 
         $data['fields'] = [];
         $data['result'] = [];
@@ -36,9 +47,7 @@ class ControllerExtensionModuleCsvImport extends Controller {
             $products_added = 0;
             $products_updated = 0;
             require (__DIR__ . '/CsvImporter.php');
-            
 
-            
             if ($this->request->files) {
                 $uploaded_file = $this->uploadFile();
 
@@ -46,21 +55,68 @@ class ControllerExtensionModuleCsvImport extends Controller {
 
                     $this->importer = new CsvImporter($uploaded_file, true, ',', 2000);
 
-                    $this->result = $this->importer->getCsv();
-
-
+                    $this->result = $this->importer->getCsv(5);
                     $data['result'] = $this->result;
 
                     $this->fields = $this->importer->getHead();
-
                     $data['fields'] = $this->fields;
 
 
                     $this->import_fields = $this->importer->getHead();
                     $data['import_fields'] = $this->import_fields;
 
-
-                    $products_added_updated = $this->model_catalog_csv_import->store_db($this->import_fields, $this->result);
+                    if ($_POST['supplier'] === 'valtery') {
+                        $products_added_updated = $this->model_catalog_csv_import->store_db($this->import_fields,
+                            $this->result);
+                    }
+                    elseif ($_POST['supplier'] === 'tango') {
+                        $products_added_updated = $this->model_catalog_tango_import->store_db($this->import_fields,
+                            $this->result);
+                    }
+                    elseif ($_POST['supplier'] === 'cleo') {
+                        $products_added_updated = $this->model_catalog_cleo_import->store_db($this->import_fields,
+                            $this->result);
+                    }
+                    elseif ($_POST['supplier'] === 'tex-design') {
+                        $products_added_updated = $this->model_catalog_texdesign_import->store_db($this->result);
+                    }
+                    elseif ($_POST['supplier'] === 'tex-design_pillow_cases') {
+                        $products_added_updated = $this->model_catalog_texdesignpc_import->store_db($this->result);
+                    }
+                    elseif ($_POST['supplier'] === 'tex-design_blankets') {
+                        $products_added_updated = $this->model_catalog_texdesignbt_import->store_db($this->result);
+                    }
+                    elseif ($_POST['supplier'] === 'tex-design_plaids') {
+                        $products_added_updated = $this->model_catalog_texdesignpd_import->store_db($this->result);
+                    }
+                    elseif ($_POST['supplier'] === 'tex-design_duvet_cover') {
+                        $products_added_updated = $this->model_catalog_texdesigndc_import->store_db($this->result);
+                    }
+                    elseif ($_POST['supplier'] === 'tex-design_bedspreads') {
+                        $products_added_updated = $this->model_catalog_texdesignbs_import->store_db($this->result);
+                    }
+                    elseif ($_POST['supplier'] === 'tex-design_sheets') {
+                        $products_added_updated = $this->model_catalog_texdesignst_import->store_db($this->result);
+                    }
+                    elseif ($_POST['supplier'] === 'kingsilk') {
+                        $products_added_updated = $this->model_catalog_kingsilk_import->store_db($this->result);
+                    }
+                    elseif ($_POST['supplier'] === 'kingsilk_bedclothes') {
+                        $products_added_updated = $this->model_catalog_kingsilkbc_import->store_db($this->result);
+                    }
+                    elseif ($_POST['supplier'] === 'kingsilk_pillows') {
+                        $products_added_updated = $this->model_catalog_kingsilkpw_import->store_db($this->result);
+                    }
+                    elseif ($_POST['supplier'] === 'kingsilk_blankets') {
+                        $products_added_updated = $this->model_catalog_kingsilkbt_import->store_db($this->result);
+                    }
+                    elseif ($_POST['supplier'] === 'kingsilk_bedspreads') {
+                        $products_added_updated = $this->model_catalog_kingsilkbs_import->store_db($this->result);
+                    }
+                    elseif ($_POST['supplier'] === 'mioletto') {
+                        $this->load->model('catalog/mioletto_import');
+                        $products_added_updated = $this->model_catalog_mioletto_import->store_db($this->result);
+                    }
 
                     $csv_import_result = explode('_', $products_added_updated);
 

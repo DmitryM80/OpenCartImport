@@ -10,7 +10,6 @@ class CsvImporter
     private $header;
     private $separator;
     private $length;
-
     private $tableHead;
 
     public function __construct($fileName, $header=false, $separator=',', $length=8000)
@@ -50,10 +49,10 @@ class CsvImporter
             if ($this->header)
             {
                 foreach ($this->tableHead as $k => $v)
-                {
-                    $row1[$v] = $row[$k];
+                {                    
+                    $row1[$v] = $row[$k];                    
                 }
-                $data[] = $row1;
+                $data[] = $row1;                
             }
             else
             {
@@ -62,7 +61,7 @@ class CsvImporter
 
             if ($max > 0 && $max == $line) break;
         }
-
+        
         return $data;
     }
 

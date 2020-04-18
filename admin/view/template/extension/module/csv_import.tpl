@@ -36,6 +36,30 @@
               </select>
             </div>
           </div>
+
+          <div class="col-lg-5 сol-md-5 col-sm-10">
+              <div class="form-group" style="padding: 20px">
+              <label for="extension">Выберите поставщика</label>
+              <select class="form-control" name="supplier">
+                  <option value="valtery">Valtery</option>
+                  <option value="tango">Tango</option>
+                  <option value="cleo">Cleo</option>
+                  <option value="tex-design">Tex-design</option>
+                  <option value="tex-design_pillow_cases">Tex-design Наволочки</option>
+                  <option value="tex-design_blankets">Tex-design Одеяла</option>
+                  <option value="tex-design_plaids">Tex-design Пледы</option>
+                  <option value="tex-design_duvet_cover">Tex-design Пододеяльники</option>
+                  <option value="tex-design_bedspreads">Tex-design Покрывала</option>
+                  <option value="tex-design_sheets">Tex-design Простыни</option>
+                  <option value="kingsilk">Kingsilk Удаление</option>
+                  <option value="kingsilk_bedclothes">Kingsilk Постельное белье</option>
+                  <option value="kingsilk_pillows">Kingsilk Подушки</option>
+                  <option value="kingsilk_blankets">Kingsilk Одеяла</option>
+                  <option value="kingsilk_bedspreads">Kingsilk Покрывала</option>
+                  <option value="mioletto">Mioletto</option>
+              </select>
+            </div>
+          </div>
           
           <div class="col-lg-5 сol-md-5 col-sm-10">
               <div class="form-group">
