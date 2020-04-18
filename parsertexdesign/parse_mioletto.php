@@ -2,11 +2,9 @@
 
 ini_set('max_execution_time', 300); // работает долго
 
-require "/Volumes/StorageMac/Work2/Postelio/PostelioFTP/vendor/autoload.php";
+require "path_to_vendor/vendor/autoload.php";
 use KubAT\PhpSimple\HtmlDomParser;
 
-
-// $siteBaseUrl = 'https://mioletto.su';
 
 $mioletto_cats = array(
     'bedclothes' => array(
@@ -63,138 +61,9 @@ $mioletto_test = array(
         'category_link' => 'https://mioletto.su/raznoe/pododeyalniki/',
         'page_num' => 2
     ),  // 2
-    'var_bedsheets' => array(
-        'category_name' => 'Разное / простыни',
-        'category_link' => 'https://mioletto.su/raznoe/prostyni/',
-        'page_num' => 4           
-    ),  // 4
-
 );
 
 
-
-function getBedClothes()
-{
-    $category = 'Постельное белье';
-    $siteBaseUrl = 'https://mioletto.su';
-    $categoryUrl = 'https://mioletto.su/postelnoe-bele/';
-    $numPages = 12;
-    $productLinks = array();
-
-    for ($n = 1; $n <= $numPages; $n++)
-    {
-        $pageUrl = $categoryUrl .'?page='. $n;
-        $productLinks[] = getProductLinks($pageUrl);
-    }
-
-    $productLinks_full = array_merge(
-        $productLinks[0],
-        $productLinks[1],
-        $productLinks[2],
-        $productLinks[3],
-        $productLinks[4],
-        $productLinks[5],
-        $productLinks[6],
-        $productLinks[7],
-        $productLinks[8],
-        $productLinks[9],
-        $productLinks[10],
-        $productLinks[11]
-    );
-    // var_dump($productLinks1); die();
-
-    // $productLinks = getProductLinks($categoryUrl .'?page=1');
-    
-    $main_fields = array(
-        'Название товара',
-        'Категория',
-        'Артикул',
-        'Цена',
-        'На складе',
-        'Описание',
-        'Изображения'
-    );
-
-    $properties_list = array(
-        'Размер',
-        'Материал',
-        'Размер одеяла',
-        'Пододеяльник',
-        'Простыня',
-        'Наволочки',
-        'Состав',
-        'Цвет',
-        'Рисунок',
-        'Кружево',
-        'Упаковка',
-        'Рисунок 3D',
-        'Однотонное',
-        'Вес',
-        'Производитель',
-        'Страна производства',
-        'Рекомендуемые'
-    );
-
-    
-
-    $products = [];
-
-    $count = 0;
-
-    foreach ($productLinks as $productPage)
-    {
-        if($count < 3) {
-        
-        $html = HtmlDomParser::file_get_html($siteBaseUrl . $productPage);
-        
-        
-        
-        $currentItemData = [];
-
-        $currentItemData[$main_fields[0]] = getName($html);
-        $currentItemData[$main_fields[1]] = $category;
-        $currentItemData[$main_fields[2]] = getSku($html);
-        $currentItemData[$main_fields[3]] = getPrice($html);
-        $currentItemData[$main_fields[4]] = getStock($html);
-        $currentItemData[$main_fields[5]] = getDescription($html);
-        $currentItemData[$main_fields[6]] = getImages($siteBaseUrl, $html);
-
-        foreach ($properties_list as $property)
-        {
-            $currentItemData[$property] = '';
-        }
-
-        $properties = getProperties($html);
-
-        foreach ($properties_list as $prop)
-        {
-            foreach ($properties as $key => $value)
-            {
-                if (rtrim($key, ':') == $prop)
-                    $currentItemData[$prop] = $value;
-            }
-
-        }
-
-        $currentItemData['Рекомендуемые'] = getRelated($html);
-
-        $count++;
-        
-        
-        
-        $products[] = $currentItemData;
-        }
-
-        
-    }
-
-    var_dump($products);
-    $headers = array_merge($main_fields, $properties_list);
-    
-    products2csv($headers, $products);
-
-    // exit(0);
-}
 
 function getProducts($cats_array)
 {
@@ -262,7 +131,6 @@ function getProducts($cats_array)
 
         foreach ($productLinks as $productPage)
         {
-            // var_dump($siteBaseUrl . $productPage);
             // if($count < 3) {
             
             $html = HtmlDomParser::file_get_html($siteBaseUrl . $productPage);
@@ -302,7 +170,7 @@ function getProducts($cats_array)
             
             
             
-            // $products[] = $currentItemData;
+           
             $cat_products[] = $currentItemData;
             // }
             
@@ -312,103 +180,10 @@ function getProducts($cats_array)
         $products[] = $cat_products;
 
     }
-    /* var_dump($products);
-    die(); */
 
-
-    
-    
-    /* $main_fields = array(
-        'Название товара',
-        'Категория',
-        'Артикул',
-        'Цена',
-        'На складе',
-        'Описание',
-        'Изображения'
-    );
-
-    $properties_list = array(
-        'Размер',
-        'Материал',
-        'Размер одеяла',
-        'Пододеяльник',
-        'Простыня',
-        'Наволочки',
-        'Состав',
-        'Цвет',
-        'Рисунок',
-        'Кружево',
-        'Упаковка',
-        'Рисунок 3D',
-        'Однотонное',
-        'Вес',
-        'Производитель',
-        'Страна производства',
-        'Рекомендуемые'
-    );
-
-    
-
-    $products = [];
-
-    $count = 0;
-
-    foreach ($productLinks as $productPage)
-    {
-        if($count < 3) {
-        
-        $html = HtmlDomParser::file_get_html($siteBaseUrl . $productPage);
-        
-        
-        
-        $currentItemData = [];
-
-        $currentItemData[$main_fields[0]] = getName($html);
-        $currentItemData[$main_fields[1]] = $category;
-        $currentItemData[$main_fields[2]] = getSku($html);
-        $currentItemData[$main_fields[3]] = getPrice($html);
-        $currentItemData[$main_fields[4]] = getStock($html);
-        $currentItemData[$main_fields[5]] = getDescription($html);
-        $currentItemData[$main_fields[6]] = getImages($siteBaseUrl, $html);
-
-        foreach ($properties_list as $property)
-        {
-            $currentItemData[$property] = '';
-        }
-
-        $properties = getProperties($html);
-
-        foreach ($properties_list as $prop)
-        {
-            foreach ($properties as $key => $value)
-            {
-                if (rtrim($key, ':') == $prop)
-                    $currentItemData[$prop] = $value;
-            }
-
-        }
-
-        $currentItemData['Рекомендуемые'] = getRelated($html);
-
-        $count++;
-        
-        
-        
-        $products[] = $currentItemData;
-        }
-
-        
-    } */
-
-    // var_dump($products[0]);
     $headers = array_merge($main_fields, $properties_list);
-
-    // var_dump($headers);
     
     products2csv($headers, $products[0]);
-
-    // exit(0);
 }
 
 
@@ -546,5 +321,4 @@ function products2csv($headers, $products)
     fclose($fh);
 }
 
-// getBedClothes();
 getProducts($mioletto_cats);
