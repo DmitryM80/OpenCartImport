@@ -55,6 +55,7 @@ class ControllerExtensionModuleCsvImport extends Controller {
 
                     $this->importer = new CsvImporter($uploaded_file, true, ',', 2000);
 
+                    // limit amount of products to int on develop
                     $this->result = $this->importer->getCsv(5);
                     $data['result'] = $this->result;
 
