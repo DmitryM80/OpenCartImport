@@ -4,7 +4,7 @@ class ModelCatalogMiolettoImport extends Model
 {
 
     private $supplierName = 'mioletto';
-    private $dbName = 'igorgalae2';    
+    // private $dbName = 'xxxxxxxx';    
 
     public function store_db($csv)
     {
@@ -37,17 +37,22 @@ class ModelCatalogMiolettoImport extends Model
         ];
 
         $requiredOcProductAttributeFields = [
-            'Размер подушек (см)',
-            'Высота, см',
+            'Размер',
             'Материал',
-            'Категория материала',
-            'Вес (г)',
-            'Материал чехла',
+            'Размер пододеяльника',
+            'Кол-во пододеяльников',
+            'Размер одеяла',
+            'Размер простыни',
+            'Размер наволочки',
+            'Кол-во наволочек',
             'Состав',
-            'Плотность ткани',
-            'Упаковка',
-            'Страна производитель',
             'Цвет',
+            'Рисунок',
+            'Кружево',
+            'Упаковка комплекта',
+            'Тип цвета',
+            'Вес',
+            'Страна производитель'
         ];
 
         $requiredOcFilterOptionFields = [
@@ -142,7 +147,7 @@ class ModelCatalogMiolettoImport extends Model
 
             
 
-            foreach ($requiredOcFilterOptionFields as $productFilterField) {
+            /* foreach ($requiredOcFilterOptionFields as $productFilterField) {
                 var_dump($productFilterField);
                 $currentFilter = $productFilterField;
                 $currentFilter = ($currentFilter === 'Размер подушек (см)') ? 'Размер' : $currentFilter;
@@ -151,16 +156,19 @@ class ModelCatalogMiolettoImport extends Model
                 var_dump($currentFilter);
                 var_dump($currentFilterValue);
                 var_dump($parentCategoryId);
-                // END
                 $this->insertIntoOcFilterOptionTables2($currentFilter, $currentFilterValue, $productId, $parentCategoryId);
-            }
+            } */
+
+            
 
             foreach ($requiredOcProductAttributeFields as $productAttributeField) {
                 $currentAttribute = $productAttributeField;
-                $currentAttribute = ($currentAttribute === 'Размер подушек (см)') ? 'Размер' : $currentAttribute;
+                // $currentAttribute = ($currentAttribute === 'Размер подушек (см)') ? 'Размер' : $currentAttribute;
                 $currentAttributeValue = $product[$productAttributeField];
                 $this->insertIntoOcProductAttributeTables($currentAttribute, $currentAttributeValue, $productId);
             }
+
+            var_dump($parentCategoryId, $productId); die();
 
             $this->insertIntoOcCategoryToStoreTable($productId, $parentCategoryId);
         }
@@ -1163,7 +1171,7 @@ class ModelCatalogMiolettoImport extends Model
      * @param $dbName
      * @param $tableName
      */
-    private function createTable($dbName, $tableName, $fieldName)
+    /* private function createTable($dbName, $tableName, $fieldName)
     {
         $showTable = $this->db->query("SHOW TABLES FROM `{$dbName}` like 'oc_{$tableName}'");
 
@@ -1175,7 +1183,7 @@ class ModelCatalogMiolettoImport extends Model
                     {$fieldName} VARCHAR(200) NULL DEFAULT NULL)"
             );
         }
-    }
+    } */
 
     /**
      * @param $productId
