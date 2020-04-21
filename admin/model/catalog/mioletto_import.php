@@ -13,6 +13,7 @@ class ModelCatalogMiolettoImport extends Model
 
         $requiredFields = [
             'Наименование товара',
+            'Категория',
             'Артикул',
             'Цена',
             'Описание',
@@ -52,18 +53,25 @@ class ModelCatalogMiolettoImport extends Model
             'Упаковка комплекта',
             'Тип цвета',
             'Вес',
+            'Производитель',
             'Страна производитель'
         ];
 
         $requiredOcFilterOptionFields = [
             'Размер',
             'Материал',
-            'Вес (г)',
-            'Материал чехла',
-            'Плотность ткани',
-            'Упаковка',
-            'Страна производитель',
+            'Размер пододеяльника',
+            'Кол-во пододеяльников',
+            'Размер одеяла',
+            'Размер простыни',
+            'Размер наволочки',
+            'Кол-во наволочек',
             'Цвет',
+            'Рисунок',
+            'Упаковка комплекта',
+            'Тип цвета',
+            'Производитель',
+            'Страна производитель'
         ];
 
         $tags = [
@@ -77,10 +85,8 @@ class ModelCatalogMiolettoImport extends Model
         
 
         $product = [];
-        // $productType = "Подушки";
         $imageQuantity = 6;
 
-        // $this->createTable($this->dbName, 'product_video', 'video');
         // $this->createTable($this->dbName, 'product_search', 'search_name');
         
         foreach ($csv as $item) {
@@ -96,17 +102,30 @@ class ModelCatalogMiolettoImport extends Model
                 }
             }
 
-            // временно
+            // Категория
+            $productCategory = $product['Категория'];
+            if (strpos($productCategory, '/') !== false) {
+                $catParts = explode(' ', $productCategory);
+                $catName = array_pop($catParts);
+                $productType = mb_convert_case($catName, MB_CASE_TITLE);
+            } elseif ($productCategory == 'Детское') {
+                $productType = 'Постельное белье';
+            } else {
+                $productType = $productCategory;
+            }
+            
+
+            // изображения товара
             $picsArray = explode(', ', $product['Изображение 1']);
             $imageQuantity = count($picsArray);
             
-
             
             $upc = $this->getUpc($product['Артикул']);
 
             /* $brandValues = $this->insertIntoManufacturerTables($product['Производитель'], 0);
             $brandId = $brandValues['brandId']; */
-            $brandId = 81; // id производителя уже известно
+
+            $brandId = 81; // id производителя уже известен
 
             $productValues = $this->insertIntoProductTables(
                 $product,
@@ -123,56 +142,39 @@ class ModelCatalogMiolettoImport extends Model
             if ($productValues['productsUpdated'] === 1) {$products_updated++;}
             $productId = $productValues['productId'];
 
-//            $this->insertIntoProductVideoTable($productId, $product['Видео']);
 
             // $this->insertIntoImageProductTable($product, $productId, $imageQuantity);
-            // временно для изображений
-            $this->insertIntoImageProductTableTemp($picsArray, $productId, $imageQuantity);
+
+            // для изображений            
+            $this->insertIntoImageProductTableMio($picsArray, $productId, $imageQuantity);
 
             
             // $this->insertIntoProductSearchTable($productId, $product['Наименование товара']);
             $this->insertIntoProductSearchTable($productId, $product['Артикул']);
 
-
-            // Категория не нужна ?
-            $productType = $item['Категория'];
-
             $parentCategoryId = $this->insertIntoCategoryTables($productType);
 
-            // $this->insertIntoProductToCategoryTable($productId, $parentCategoryId);
-
-            
-            if ($parentCategoryId)
-                $this->insertIntoProductToCategoryTable($productId, $parentCategoryId);
+            if ($parentCategoryId) { $this->insertIntoProductToCategoryTable($productId, $parentCategoryId); }
 
             
 
-            /* foreach ($requiredOcFilterOptionFields as $productFilterField) {
-                var_dump($productFilterField);
+            foreach ($requiredOcFilterOptionFields as $productFilterField) {
                 $currentFilter = $productFilterField;
-                $currentFilter = ($currentFilter === 'Размер подушек (см)') ? 'Размер' : $currentFilter;
                 $currentFilterValue = $product[$productFilterField];
-                $this->insertIntoOcFilterOptionTables($currentFilter);
-                var_dump($currentFilter);
-                var_dump($currentFilterValue);
-                var_dump($parentCategoryId);
+                $this->insertIntoOcFilterOptionTables($currentFilter);                
                 $this->insertIntoOcFilterOptionTables2($currentFilter, $currentFilterValue, $productId, $parentCategoryId);
-            } */
+            }
 
-            
 
             foreach ($requiredOcProductAttributeFields as $productAttributeField) {
                 $currentAttribute = $productAttributeField;
-                // $currentAttribute = ($currentAttribute === 'Размер подушек (см)') ? 'Размер' : $currentAttribute;
                 $currentAttributeValue = $product[$productAttributeField];
                 $this->insertIntoOcProductAttributeTables($currentAttribute, $currentAttributeValue, $productId);
             }
 
-            var_dump($parentCategoryId, $productId); die();
-
             $this->insertIntoOcCategoryToStoreTable($productId, $parentCategoryId);
         }
-
+        
         return $products_added.'_'.$products_updated;
     }
 
@@ -182,7 +184,7 @@ class ModelCatalogMiolettoImport extends Model
      *
      * @return array
      */
-    public function insertIntoManufacturerTables($brand, $currentProductBrandSortOrder)
+    /* public function insertIntoManufacturerTables($brand, $currentProductBrandSortOrder)
     {
         $currentProductBrandName = trim($brand);
 
@@ -232,7 +234,7 @@ class ModelCatalogMiolettoImport extends Model
         return [
             'brandId' => $currentProductBrandId,
         ];
-    }
+    } */
 
     /**
      * @param $requiredOcFilterOptionFields
@@ -307,6 +309,7 @@ class ModelCatalogMiolettoImport extends Model
         $upc
     ) 
     {
+
         $productsAdded = 0;
         $productsUpdated = 0;
 
@@ -316,7 +319,7 @@ class ModelCatalogMiolettoImport extends Model
         }
         $tag = trim($tag, ', ');
 
-        // временно, берем только первую картинку
+        // берем только первую картинку
         $tmpImg = explode(', ', $productMainImage);
         $productMainImage = $tmpImg[0];
         
@@ -345,6 +348,7 @@ class ModelCatalogMiolettoImport extends Model
         
 
         if ($this->isEmptyQueryResult($currentProductId)) {
+            
             $this->db->query(
                 "INSERT INTO `oc_product`
                         (`model`, `sku`, `upc`, `ean`, 
@@ -361,9 +365,7 @@ class ModelCatalogMiolettoImport extends Model
             );
 //                        100,7,'','{$brandId}',
 
-            $productId = $this->db->getlastId();
-
-            
+            $productId = $this->db->getlastId();            
 
             $this->db->query(
                 "INSERT INTO `oc_product_description`
@@ -376,9 +378,7 @@ class ModelCatalogMiolettoImport extends Model
                      '{$tag}','{$tag}')"
             );
 
-            $productsAdded++;
-
-            
+            $productsAdded++;           
 
         } else {
 
@@ -624,18 +624,13 @@ class ModelCatalogMiolettoImport extends Model
                 // TODO переделать
                 $ocfOptionValueId = ($currentAttributeValue === 'Цветы') ? '4292657636' : $ocfOptionValueIdQuery->row['value_id'];
 
-                var_dump($currentAttributeValue);
-                var_dump($ocfOptionValueId);
-                var_dump($ocfOptionId);
-                
-
                 $this->db->query(
                     "UPDATE `oc_ocfilter_option_value_description` 
                      SET `name`='{$currentAttributeValue}'
                      WHERE `value_id`={$ocfOptionValueId} AND `option_id`={$ocfOptionId}"
                 );
             }
-            die();
+            
             // Аттрибуты для фильтра
 
             $ocfAttributeId = $ocfOptionId - 10000;
@@ -1101,46 +1096,15 @@ class ModelCatalogMiolettoImport extends Model
         }
     }
 
-    /**
-     * @param $product
-     * @param $productId
-     * @param $imagesQuantity
-     */
-    public function insertIntoImageProductTable($product, $productId, $imagesQuantity)
-    {
-        for ($i = 2; $i <= $imagesQuantity; $i++) {
-            $item = 'Изображение '.$i;
-            if (!empty(trim($product[$item]))) {
-                $image = $this->copyImage($product[$item]);
-                if ($image === null) {
-                    return null;
-                }
-
-                $productImageQuery = $this->db->query(
-                    "SELECT `product_id` FROM `oc_product_image`
-                     WHERE `product_id` = '{$productId}' 
-                     AND `image` = '{$image}' 
-                     LIMIT 1"
-                );
-
-                if ($this->isEmptyQueryResult($productImageQuery)) {
-                    $this->db->query(
-                        "INSERT INTO `oc_product_image`
-                                (`product_id`, `image`, `sort_order`)
-                         VALUES ('{$productId}','{$image}',0)"
-                    );
-                }
-            }
-        }
-    }
     
     /**
-     * @param $product
+     * @param $imagesArray
      * @param $productId
      * @param $imagesQuantity
      */
-    public function insertIntoImageProductTableTemp($imgArray, $productId, $imagesQuantity)
-    {
+    public function insertIntoImageProductTableMio($imgArray, $productId, $imagesQuantity)
+    {   
+        // var_dump($imgArray, $imagesQuantity); die();
         for ($i = 1; $i < $imagesQuantity; $i++) {
             
             if (!empty(trim($imgArray[$i]))) {
@@ -1167,23 +1131,6 @@ class ModelCatalogMiolettoImport extends Model
         }
     }
 
-    /**
-     * @param $dbName
-     * @param $tableName
-     */
-    /* private function createTable($dbName, $tableName, $fieldName)
-    {
-        $showTable = $this->db->query("SHOW TABLES FROM `{$dbName}` like 'oc_{$tableName}'");
-
-        if ($this->isEmptyQueryResult($showTable)) {
-            $this->db->query(
-                "CREATE TABLE IF NOT EXISTS oc_{$tableName} 
-                    ({$tableName}_id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-                    product_id VARCHAR(100) NULL DEFAULT NULL,
-                    {$fieldName} VARCHAR(200) NULL DEFAULT NULL)"
-            );
-        }
-    } */
 
     /**
      * @param $productId

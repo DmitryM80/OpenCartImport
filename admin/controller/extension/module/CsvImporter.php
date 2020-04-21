@@ -46,11 +46,15 @@ class CsvImporter
 
         for ($line = 0; $row = fgetcsv($this->fh, $this->length, $this->separator); $line++)
         {
+            if (empty($row[0])) { continue; }
+            
             if ($this->header)
             {
                 foreach ($this->tableHead as $k => $v)
-                {                    
-                    $row1[$v] = $row[$k];                    
+                {         
+                    
+                        $row1[$v] = $row[$k];   
+                             
                 }
                 $data[] = $row1;                
             }
@@ -58,7 +62,7 @@ class CsvImporter
             {
                 $data[] = $row;
             }
-
+            
             if ($max > 0 && $max == $line) break;
         }
         
